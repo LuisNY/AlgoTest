@@ -4,6 +4,7 @@
 #include <math.h>
 #include <queue>
 
+//structure used to store a node of the binary tree
 struct Node 
 {
     int val;
@@ -13,6 +14,20 @@ struct Node
     {
     }
 };
+
+//delete memory used for building the tree
+void cleanUp(Node* root)
+{
+    if(!root)
+        return;
+
+    cleanUp(root->left);
+    cleanUp(root->right);
+
+    root->left = nullptr;
+    root->right = nullptr;
+    delete root;    
+}
 
 //level order traversal of the tree to print nodes level by level
 void printNodes(Node* root)
@@ -112,6 +127,9 @@ void printHelperContainer(const std::vector<std::vector<std::pair<int,bool>>>& h
 //function that takes the input array and attempts to build the tree if possible
 bool analizeVector(std::vector<int> vect, Node** root)
 {
+    if (vect.empty()) //make sure the input array has at least one element
+        return false;
+
     std::map<int, int> myMap; //use map to keep track of how many distinct elements in the input array and how many times each of them repeats
 
     for(auto iter = vect.begin(); iter!=vect.end(); ++iter)
@@ -125,16 +143,19 @@ bool analizeVector(std::vector<int> vect, Node** root)
     if(myMap.size() != (vect.size()+1)/2) //number of distinct elements is not correct, cannot build tree
         return false;
 
-    int n = log2(vect.size())+1;
+    int n = log2(vect.size())+1; //n levels total... height of the tree
     
-    std::vector<std::vector<std::pair<int,bool>>> helperCont; //helper container that keeps track of elements appearance    
+    //helper container that keeps track of elements appearance. 
+    //the int is the tree value, the boolean is used while constructing the tree to mar the element that have been inserted in the tree    
+    std::vector<std::vector<std::pair<int,bool>>> helperCont; 
+
     for(int i=0; i<n; ++i)
-        helperCont.push_back(std::vector<std::pair<int,bool>>()); //n levels total
+        helperCont.push_back(std::vector<std::pair<int,bool>>()); //initialize each level with empty vector
     
     for(auto elem = myMap.begin(); elem != myMap.end(); ++elem)
-        helperCont[n-(elem->second)].push_back(std::make_pair(elem->first,false)); //populate helper container with elements in the map
+        helperCont[n-(elem->second)].push_back(std::make_pair(elem->first,false)); //populate each level of helper container with elements in the map
 
-    //printHelperContainer(helperCont);
+    //printHelperContainer(helperCont); //used only for debugging
     
     if(!validateHelperContainer(helperCont)) // make sure each number appear the right number of time to build the tree
         return false;
@@ -147,11 +168,8 @@ bool analizeVector(std::vector<int> vect, Node** root)
 
 int main()
 {
-    std::vector<int> inVect = {13,11,1,1,2,2,2,3,3,5,6,11,12,1,1};
-
-    //{1,1,1,1,2,2,2,3,3,8,4,5,6,7,7};//{2,2,1,1,3,1,4};//{1,1,1,7,2,11,12,13,3,3,14,2,35,7,1,1,5,4,10,24,4,4,20,5,6,6,4,20,7,9,3};//{1,1,1,1,2,2,2,8,3,4,4,5,6,7,8};//{1,1,2,2,3,2,4};//{1,1,1,1,2,2,2,8,3,4,4,5,6,7,8};
-    //{1,1,1,2,2,11,12,13,3,3,14,15,2,2,1,1,5,8,10,16,4,4,7,5,6,6,4,7,8,9,3};
-    //{1,1,1,1,10,10,10,3,3,11,11,5,6,12,13};//{1,1,1,2,2,11,12,13,3,3,14,15,2,2,1,1,5,8,10,16,4,4,7,5,6,6,4,7,8,9,3};//,1,2,3,4,5,6,7,8};
+    std::vector<int> inVect = {-2,-2,0};
+    //{1,1,1,2,2,11,12,13,3,3,14,33,2,2,1,1,5,8,10,16,4,4,7,5,6,6,4,7,8,9,3};//{13,11,1,1,2,2,2,3,3,5,6,11,12,1,1};
     
     Node* root = nullptr;
 
@@ -161,6 +179,8 @@ int main()
         printNodes(root);
     else 
         std::cout << "Impossible" << std::endl;
+
+    cleanUp(root);
 
     return 0;
 }
